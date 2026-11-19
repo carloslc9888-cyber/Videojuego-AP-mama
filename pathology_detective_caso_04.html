@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PATHOLOGY DETECTIVE: CASO #04 — EXPEDIENTE LUMINAL B</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&family=Orbitron:wght@600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #060913;
+      --panel-bg: rgba(12, 19, 36, 0.92);
+      --neon-cyan: #00f0ff;
+      --neon-pink: #ff2a85;
+      --neon-amber: #ffb800;
+      --neon-green: #00e676;
+      --neon-violet: #9d4edd;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--bg-dark);
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(0, 240, 255, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(255, 42, 133, 0.08) 0%, transparent 45%),
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+    }
+
+    .font-arcade {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .font-mono-tech {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Efecto sutil de monitor CRT / escáner clínico */
+    .crt-overlay {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%,
+        rgba(0, 0, 0, 0.16) 50%
+      );
+      background-size: 100% 4px;
+    }
+
+    .neon-border-cyan {
+      border: 1px solid rgba(0, 240, 255, 0.45);
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.14), inset 0 0 12px rgba(0, 240, 255, 0.06);
+    }
+
+    .neon-border-pink {
+      border: 1px solid rgba(255, 42, 133, 0.5);
+      box-shadow: 0 0 18px rgba(255, 42, 133, 0.16), inset 0 0 12px rgba(255, 42, 133, 0.06);
+    }
+
+    .neon-border-amber {
+      border: 1px solid rgba(255, 184, 0, 0.5);
+      box-shadow: 0 0 18px rgba(255, 184, 0, 0.16);
+    }
+
+    .btn-arcade {
+      position: relative;
+      transition: all 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+      border-radius: 10px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .btn-arcade:hover:not(:disabled) {
+      transform: translateY(-2px);
+      filter: brightness(1.12);
+    }
+
+    .btn-arcade:active:not(:disabled) {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .btn-arcade:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 12px rgba(0, 240, 255, 0.35); }
+      50% { box-shadow: 0 0 26px rgba(0, 240, 255, 0.75); }
+    }
+
+    .pulse-cyan {
+      animation: pulseGlow 2.4s infinite ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+
+    .animate-shake {
+      animation: shake 0.38s ease-in-out;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-38px) scale(1.15); }
+    }
+
+    .floating-score {
+      position: fixed;
+      pointer-events: none;
+      z-index: 60;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 800;
+      animation: floatUp 0.95s ease-out forwards;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      touch-action: none;
+    }
+
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #080d1a; }
+    ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #00f0ff; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+  <div class="crt-overlay"></div>
+
+  <!-- TOAST / MENSAJE FLOTANTE DE FEEDBACK (SIN ALERT) -->
+  <div id="feedback-banner" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 hidden max-w-xl w-[92%] px-4 py-3 rounded-xl border backdrop-blur-md shadow-2xl transition-all duration-200">
+    <div class="flex items-start gap-3">
+      <span id="feedback-icon" class="text-xl mt-0.5">⚡</span>
+      <div class="flex-1">
+        <div id="feedback-title" class="font-arcade text-xs uppercase tracking-wider font-bold"></div>
+        <div id="feedback-text" class="text-xs sm:text-sm text-slate-200 mt-0.5 leading-snug"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BARRA SUPERIOR HUD ARCADE -->
+  <header id="hud-header" class="sticky top-0 z-40 bg-[#070b16]/95 backdrop-blur-md border-b border-cyan-500/30 px-3 sm:px-6 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <!-- Identificador del Caso -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-lg bg-cyan-500/15 border border-cyan-400/50 flex items-center justify-center text-cyan-300 font-arcade font-black text-sm shadow-inner">
+          #04
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-arcade text-xs sm:text-sm font-bold tracking-wider text-cyan-300">PATHOLOGY DETECTIVE</span>
+            <span class="hidden md:inline-block text-[10px] font-mono-tech px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 border border-pink-500/40">UGR · 3º MEDICINA</span>
+          </div>
+          <div id="hud-act-label" class="text-[11px] font-mono-tech text-slate-400">EXPEDIENTE LUMINAL B · EN ESPERA</div>
+        </div>
+      </div>
+
+      <!-- Métricas Arcade -->
+      <div class="flex items-center gap-2 sm:gap-4">
+        <!-- Integridad / Prestigio -->
+        <div class="bg-slate-900/90 border border-slate-700/80 rounded-lg px-2.5 py-1.5 min-w-[115px] sm:min-w-[145px]">
+          <div class="flex justify-between text-[10px] font-mono-tech text-slate-400 mb-1">
+            <span>RIGOR CLÍNICO</span>
+            <span id="hud-integrity-val" class="text-emerald-400 font-bold">100%</span>
+          </div>
+          <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div id="hud-integrity-bar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-300" style="width: 100%"></div>
+          </div>
+        </div>
+
+        <!-- Puntos -->
+        <div class="bg-slate-900/90 border border-cyan-500/30 rounded-lg px-3 py-1 text-right">
+          <div class="text-[9px] font-mono-tech text-cyan-400/80 uppercase">Precisión</div>
+          <div id="hud-score" class="font-arcade text-sm sm:text-base font-black text-white">00000</div>
+        </div>
+
+        <!-- Racha -->
+        <div class="bg-slate-900/90 border border-amber-500/30 rounded-lg px-2.5 py-1 text-center">
+          <div class="text-[9px] font-mono-tech text-amber-400/80 uppercase">Combo</div>
+          <div id="hud-combo" class="font-arcade text-sm sm:text-base font-black text-amber-300">x1</div>
+        </div>
+
+        <!-- Botón Audio + Botón Dossier -->
+        <button id="btn-dossier-toggle" onclick="toggleDossierModal()" title="Consultar Ficha Clínica del Caso #04" class="btn-arcade bg-slate-800 hover:bg-slate-700 border border-cyan-500/40 text-cyan-300 px-2.5 py-2 text-xs font-mono-tech flex items-center gap-1">
+          <span>📋</span><span class="hidden sm:inline">DOSSIER</span>
+        </button>
+
+        <button id="btn-mute" onclick="toggleMute()" title="Silenciar / Activar sonido" class="btn-arcade bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 px-2.5 py-2 text-xs">
+          🔊
+        </button>
+      </div>
+    </div>
+
+    <!-- Barra de progreso de los 5 Actos -->
+    <div class="max-w-7xl mx-auto mt-2 grid grid-cols-5 gap-1.5">
+      <div id="step-ind-1" class="h-1.5 rounded-full bg-slate-800 transition-all"></div>
+      <div id="step-ind-2" class="h-1.5 rounded-full bg-slate-800 transition-all"></div>
+      <div id="step-ind-3" class="h-1.5 rounded-full bg-slate-800 transition-all"></div>
+      <div id="step-ind-4" class="h-1.5 rounded-full bg-slate-800 transition-all"></div>
+      <div id="step-ind-5" class="h-1.5 rounded-full bg-slate-800 transition-all"></div>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL DE PANTALLAS -->
+  <main id="app-container" class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 flex flex-col justify-center">
+    <!-- El contenido dinámico de cada pantalla se renderiza aquí -->
+  </main>
+
+  <!-- MODAL DEL DOSSIER CLÍNICO DE REFERENCIA -->
+  <div id="dossier-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-[#0b1222] neon-border-cyan rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-5 py-4 border-b border-cyan-500/30 flex items-center justify-between bg-slate-900/90">
+        <div>
+          <span class="text-[10px] font-mono-tech text-cyan-400 uppercase tracking-widest">Archivo Hospitalario · Caso #04</span>
+          <h3 class="font-arcade text-base sm:text-lg font-bold text-white">ANAMNESIS Y ANTECEDENTES</h3>
+        </div>
+        <button onclick="toggleDossierModal()" class="btn-arcade bg-slate-800 hover:bg-rose-600/80 text-white px-3 py-1.5 text-xs font-mono-tech">✕ CERRAR</button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-4 text-sm text-slate-300 leading-relaxed">
+        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/80">
+          <div class="font-mono-tech text-xs text-cyan-400 font-bold mb-1">MOTIVO DE CONSULTA</div>
+          <p>Mujer de <strong>40 años</strong> que acude a su centro de salud por <strong>dolor en mama derecha</strong>. Se solicita estudio mamográfico y ecográfico bilateral.</p>
+        </div>
+        <div class="p-3.5 rounded-xl bg-pink-950/25 border border-pink-500/30">
+          <div class="font-mono-tech text-xs text-pink-400 font-bold mb-1">ANTECEDENTES FAMILIARES (¡PISTA CLAVE!)</div>
+          <ul class="list-disc list-inside space-y-1">
+            <li><strong>1 hermana</strong> con carcinoma de ovario diagnosticado a los 50 años.</li>
+            <li><strong>Madre</strong> diagnosticada de carcinoma de mama a los 50 años.</li>
+            <li><strong>Padre</strong> con carcinoma de próstata diagnosticado a los 70 años.</li>
+          </ul>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700/80">
+          <div class="font-mono-tech text-xs text-amber-400 font-bold mb-1">ANTECEDENTES PERSONALES Y GINECO-OBSTÉTRICOS</div>
+          <ul class="list-disc list-inside space-y-1">
+            <li><strong>Trombofilia</strong> sin tratamiento actual.</li>
+            <li><strong>Fórmula Obstétrica (FO):</strong> 5/3/2/2/2 (1 cesárea).</li>
+            <li><strong>Lactancia materna:</strong> 1 año acumulado.</li>
+            <li><strong>Fórmula Menstrual (FM):</strong> 3-4 / 28-30 días.</li>
+          </ul>
+        </div>
+        <div id="dossier-unlocked-notes" class="p-3.5 rounded-xl bg-cyan-950/25 border border-cyan-500/30">
+          <div class="font-mono-tech text-xs text-cyan-300 font-bold mb-1">HALLAZGOS DESBLOQUEADOS EN LA INVESTIGACIÓN</div>
+          <ul id="dossier-log-list" class="list-disc list-inside space-y-1 text-xs font-mono-tech text-slate-300">
+            <li>Inicia la investigación para ir registrando hallazgos diagnósticos...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. MOTOR DE AUDIO SINTETIZADO (WEB AUDIO API - SIN URLs EXTERNAS)
+       ========================================================================== */
+    const SoundFX = (() => {
+      let ctx = null;
+      let muted = false;
+
+      function init() {
+        if (!ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) ctx = new AudioContext();
+        }
+        if (ctx && ctx.state === 'suspended') ctx.resume();
+      }
+
+      function playTone(freq, type = 'sine', duration = 0.14, gainVal = 0.12, slideTo = null) {
+        if (muted) return;
+        init();
+        if (!ctx) return;
+        try {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          if (slideTo) {
+            osc.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + duration);
+          }
+          gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        } catch (e) {}
+      }
+
+      return {
+        toggleMute() {
+          muted = !muted;
+          return muted;
+        },
+        isMuted: () => muted,
+        click() { playTone(680, 'triangle', 0.06, 0.08, 920); },
+        scan() { playTone(320, 'sine', 0.18, 0.06, 540); },
+        geiger(intensity = 1) {
+          playTone(900 + intensity * 600, 'square', 0.035, 0.04);
+        },
+        stain() { playTone(440, 'sine', 0.25, 0.1, 780); },
+        success() {
+          playTone(523.25, 'triangle', 0.12, 0.13);
+          setTimeout(() => playTone(659.25, 'triangle', 0.12, 0.13), 85);
+          setTimeout(() => playTone(783.99, 'triangle', 0.22, 0.15), 170);
+        },
+        bonus() {
+          playTone(587.33, 'sine', 0.1, 0.12);
+          setTimeout(() => playTone(880, 'sine', 0.1, 0.12), 75);
+          setTimeout(() => playTone(1174.66, 'triangle', 0.26, 0.15), 150);
+        },
+        error() {
+          playTone(190, 'sawtooth', 0.18, 0.14, 130);
+          setTimeout(() => playTone(145, 'sawtooth', 0.24, 0.14, 105), 140);
+        },
+        victory() {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((n, i) => {
+            setTimeout(() => playTone(n, 'triangle', 0.22, 0.15), i * 110);
+          });
+        }
+      };
+    })();
+
+    function toggleMute() {
+      const m = SoundFX.toggleMute();
+      document.getElementById('btn-mute').textContent = m ? '🔇' : '🔊';
+      if (!m) SoundFX.click();
+    }
+
+    /* ==========================================================================
+       2. ESTADO GLOBAL DEL JUEGO Y UTILIDADES UI
+       ========================================================================== */
+    const GameState = {
+      act: 0, // 0 = Inicio, 1..5 = Actos, 6 = Resultados
+      score: 0,
+      combo: 1,
+      maxCombo: 1,
+      integrity: 100,
+      mistakes: 0,
+      startTime: 0,
+      medals: new Set(),
+      dossierLog: [],
+      // Estado interno de cada acto
+      act1: { foundLesion: false, scanProgress: 0, step: 'scan' },
+      act2: { zoom: '2x', foundZones: [false, false], clickedArtifact: false, step: 'micro' },
+      act3: { stained: { RE: false, RP: false, KI67: false, HER2: false }, activeMarker: 'RE', step: 'lab' },
+      act4: { sentinelFound: false, wireVerified: false, marginsMeasured: [false, false, false, false], trapSolved: false, step: 'gamma' },
+      act5: { scannedNodes: [false, false, false], cytokeratinApplied: false, step: 'nodes' }
+    };
+
+    let activeAnimationFrame = null;
+
+    function stopCanvasLoop() {
+      if (activeAnimationFrame) {
+        cancelAnimationFrame(activeAnimationFrame);
+        activeAnimationFrame = null;
+      }
+    }
+
+    function addScore(points, label = '', x = null, y = null) {
+      const total = Math.round(points * GameState.combo);
+      GameState.score += total;
+      GameState.combo = Math.min(5, GameState.combo + 1);
+      GameState.maxCombo = Math.max(GameState.maxCombo, GameState.combo);
+      updateHUD();
+      spawnFloatingText(`+${total}${label ? ' ' + label : ''}`, '#00f0ff', x, y);
+    }
+
+    function penalize(integrityLoss, msgTitle, msgBody) {
+      GameState.mistakes += 1;
+      GameState.combo = 1;
+      GameState.integrity = Math.max(15, GameState.integrity - integrityLoss);
+      updateHUD();
+      SoundFX.error();
+      showFeedback('error', msgTitle, msgBody);
+      const app = document.getElementById('app-container');
+      app.classList.remove('animate-shake');
+      void app.offsetWidth;
+      app.classList.add('animate-shake');
+    }
+
+    function logDossier(entry) {
+      if (!GameState.dossierLog.includes(entry)) {
+        GameState.dossierLog.push(entry);
+        const list = document.getElementById('dossier-log-list');
+        if (list) {
+          list.innerHTML = GameState.dossierLog.map(item => `<li>${item}</li>`).join('');
+        }
+      }
+    }
+
+    function updateHUD() {
+      document.getElementById('hud-score').textContent = String(GameState.score).padStart(5, '0');
+      document.getElementById('hud-combo').textContent = `x${GameState.combo}`;
+      document.getElementById('hud-integrity-val').textContent = `${GameState.integrity}%`;
+
+      const bar = document.getElementById('hud-integrity-bar');
+      bar.style.width = `${GameState.integrity}%`;
+      if (GameState.integrity > 60) {
+        bar.className = 'h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-300';
+      } else if (GameState.integrity > 35) {
+        bar.className = 'h-full bg-gradient-to-r from-amber-500 to-yellow-400 transition-all duration-300';
+      } else {
+        bar.className = 'h-full bg-gradient-to-r from-rose-600 to-pink-500 transition-all duration-300';
+      }
+
+      const actNames = [
+        'EXPEDIENTE LUMINAL B · LISTO PARA INICIAR',
+        'ACTO 1/5 · CONSULTA Y ECOGRAFÍA MAMARIA',
+        'ACTO 2/5 · MICROSCOPIO BAG (H&E)',
+        'ACTO 3/5 · LABORATORIO INMUNOHISTOQUÍMICA',
+        'ACTO 4/5 · LINFOGAMMAGRAFÍA Y TUMORECTOMÍA',
+        'ACTO 5/5 · GANGLIO CENTINELA Y ESTADIAJE pTNM',
+        'INFORME FINAL · CASO #04 RESUELTO'
+      ];
+      document.getElementById('hud-act-label').textContent = actNames[GameState.act] || '';
+
+      for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById(`step-ind-${i}`);
+        if (i < GameState.act) {
+          el.className = 'h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#00e676] transition-all';
+        } else if (i === GameState.act) {
+          el.className = 'h-1.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#00f0ff] transition-all';
+        } else {
+          el.className = 'h-1.5 rounded-full bg-slate-800 transition-all';
+        }
+      }
+    }
+
+    let feedbackTimeout = null;
+    function showFeedback(type, title, text) {
+      const banner = document.getElementById('feedback-banner');
+      const icon = document.getElementById('feedback-icon');
+      const titleEl = document.getElementById('feedback-title');
+      const textEl = document.getElementById('feedback-text');
+
+      banner.classList.remove('hidden', 'border-cyan-400', 'bg-cyan-950/90', 'border-rose-500', 'bg-rose-950/90', 'border-amber-400', 'bg-amber-950/90');
+
+      if (type === 'success') {
+        banner.classList.add('border-cyan-400', 'bg-cyan-950/90');
+        icon.textContent = '✅';
+        titleEl.className = 'font-arcade text-xs uppercase tracking-wider font-bold text-cyan-300';
+      } else if (type === 'bonus') {
+        banner.classList.add('border-amber-400', 'bg-amber-950/90');
+        icon.textContent = '🏆';
+        titleEl.className = 'font-arcade text-xs uppercase tracking-wider font-bold text-amber-300';
+      } else {
+        banner.classList.add('border-rose-500', 'bg-rose-950/90');
+        icon.textContent = '⚠️';
+        titleEl.className = 'font-arcade text-xs uppercase tracking-wider font-bold text-rose-300';
+      }
+
+      titleEl.textContent = title;
+      textEl.textContent = text;
+
+      clearTimeout(feedbackTimeout);
+      feedbackTimeout = setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 4200);
+    }
+
+    function spawnFloatingText(text, color = '#00f0ff', x = null, y = null) {
+      const el = document.createElement('div');
+      el.className = 'floating-score text-sm sm:text-base';
+      el.style.color = color;
+      el.textContent = text;
+      el.style.left = `${x !== null ? x : window.innerWidth / 2 - 40}px`;
+      el.style.top = `${y !== null ? y : 120}px`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 950);
+    }
+
+    function toggleDossierModal() {
+      SoundFX.click();
+      const modal = document.getElementById('dossier-modal');
+      modal.classList.toggle('hidden');
+    }
+
+    function setupResponsiveCanvas(canvas, drawFn) {
+      function resize() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(300, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(220, Math.floor(rect.height * dpr));
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        if (drawFn) drawFn(ctx, rect.width, rect.height);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+      return () => window.removeEventListener('resize', resize);
+    }
+
+    function getPointerPos(canvas, e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top,
+        nx: (clientX - rect.left) / rect.width,
+        ny: (clientY - rect.top) / rect.height,
+        clientX,
+        clientY
+      };
+    }
+
+    /* ==========================================================================
+       3. PANTALLA DE INICIO (BRIEFING CYBER-NOIR)
+       ========================================================================== */
+    function renderIntroScreen() {
+      stopCanvasLoop();
+      GameState.act = 0;
+      updateHUD();
+
+      const app = document.getElementById('app-container');
+      app.innerHTML = `
+        <div class="max-w-4xl mx-auto w-full bg-[#0a1020]/95 neon-border-cyan rounded-2xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+          <div class="absolute -top-24 -right-24 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            <span class="px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 font-mono-tech text-xs font-bold">
+              DEPARTAMENTO DE ANATOMÍA PATOLÓGICA · UGR
+            </span>
+            <span class="px-3 py-1 rounded-full bg-pink-500/15 border border-pink-400/40 text-pink-300 font-mono-tech text-xs font-bold">
+              ARCHIVO CLASIFICADO: CASO #04
+            </span>
+          </div>
+
+          <h1 class="font-arcade text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+            PATHOLOGY DETECTIVE:<br/>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-pink-400">
+              EXPEDIENTE LUMINAL B
+            </span>
+          </h1>
+
+          <p class="mt-4 text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
+            Una paciente de <strong>40 años</strong> acude a consulta por dolor en la mama derecha, pero las pruebas de imagen esconden un giro inesperado en la <strong>mama izquierda</strong>. Como detective anatomopatólogo de guardia, deberás rastrear la lesión, analizar la biopsia al microscopio, revelar su código inmunohistoquímico, auditar los márgenes de la tumorectomía y emitir el veredicto <strong>pTNM</strong>.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-6">
+            <div class="bg-slate-900/90 border border-slate-700/80 rounded-xl p-3.5">
+              <div class="text-cyan-400 font-arcade text-xs font-bold mb-1">🔬 5 ACTOS INTERACTIVOS</div>
+              <p class="text-xs text-slate-400">Ecografía en tiempo real, microscopía H&E, tinción IHQ, calibre láser de márgenes y citoqueratinas AE1/AE3.</p>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-700/80 rounded-xl p-3.5">
+              <div class="text-pink-400 font-arcade text-xs font-bold mb-1">🕵️ TRAMPAS DIAGNÓSTICAS</div>
+              <p class="text-xs text-slate-400">Cuidado con artefactos de tinta/pliegue, hematíes congestivos y las cotas verdes del dossier quirúrgico.</p>
+            </div>
+            <div class="bg-slate-900/90 border border-slate-700/80 rounded-xl p-3.5">
+              <div class="text-amber-400 font-arcade text-xs font-bold mb-1">🏅 RANGO Y MEDALLAS</div>
+              <p class="text-xs text-slate-400">Mantén el combo activo y el rigor clínico al máximo para alcanzar el rango de Jefe de Servicio.</p>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+            <button onclick="startGame()" class="btn-arcade pulse-cyan w-full sm:w-auto bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-arcade text-sm sm:text-base px-8 py-4 shadow-lg">
+              ▶ INICIAR INVESTIGACIÓN DEL CASO #04
+            </button>
+            <button onclick="toggleDossierModal()" class="btn-arcade w-full sm:w-auto bg-slate-800/90 hover:bg-slate-700 border border-slate-600 text-slate-200 font-mono-tech text-xs px-5 py-4">
+              📋 REVISAR ANAMNESIS PREVIA
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function startGame() {
+      SoundFX.success();
+      GameState.score = 0;
+      GameState.combo = 1;
+      GameState.maxCombo = 1;
+      GameState.integrity = 100;
+      GameState.mistakes = 0;
+      GameState.startTime = Date.now();
+      GameState.medals = new Set();
+      GameState.dossierLog = ['Paciente de 40 años. Consulta por mastalgia derecha. AF: Madre ca. mama (50a), hermana ca. ovario (50a), padre ca. próstata (70a).'];
+      logDossier('Anamnesis registrada.');
+      renderAct1();
+    }
+
+    /* ==========================================================================
+       4. ACTO 1: LA CONSULTA Y EL RASTREO ECOGRÁFICO
+       ========================================================================== */
+    function renderAct1() {
+      stopCanvasLoop();
+      GameState.act = 1;
+      GameState.act1 = { foundLesion: false, scanProgress: 0, step: 'scan' };
+      updateHUD();
+
+      const app = document.getElementById('app-container');
+      app.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <!-- Panel Izquierdo: Visor Ecográfico Interactivo -->
+          <div class="lg:col-span-7 bg-[#0a1122] neon-border-cyan rounded-2xl p-4 flex flex-col">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <span class="text-[10px] font-mono-tech text-cyan-400 uppercase tracking-widest">Acto 1 · Radiodiagnóstico</span>
+                <h2 class="font-arcade text-base sm:text-lg font-bold text-white">SONDA ECOGRÁFICA BILATERAL</h2>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono-tech text-slate-400">SEÑAL DE HALLAZGO:</span>
+                <div class="w-24 h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                  <div id="eco-progress-bar" class="h-full bg-cyan-400 transition-all duration-150" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="relative flex-1 min-h-[300px] sm:min-h-[360px] bg-black rounded-xl overflow-hidden border border-slate-700/80">
+              <canvas id="eco-canvas"></canvas>
+              <div class="absolute bottom-3 left-3 right-3 flex justify-between items-center pointer-events-none text-[11px] font-mono-tech text-cyan-300/90 bg-black/70 px-3 py-1.5 rounded-lg border border-cyan-500/30">
+                <span>DESLIZA LA SONDA SOBRE AMBAS MAMAS</span>
+                <span id="eco-coords">MAMA DCHA · NORMAL</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel Derecho: Expediente y Toma de Decisiones -->
+          <div class="lg:col-span-5 bg-[#0a1122] border border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700">
+                <div class="text-[11px] font-mono-tech text-amber-400 font-bold">⚠️ PARADOJA CLÍNICA</div>
+                <p class="text-xs sm:text-sm text-slate-300 mt-1">
+                  La paciente consulta por <strong>dolor en mama derecha</strong>, pero al rastrear con la sonda debes explorar ambos lados. ¡No te fíes solo del lado sintomático!
+                </p>
+              </div>
+
+              <div id="act1-task-box" class="p-4 rounded-xl bg-cyan-950/25 border border-cyan-500/40">
+                <div class="font-arcade text-xs text-cyan-300 font-bold mb-1">MISIÓN 1A: RASTREO CON SONDA</div>
+                <p id="act1-instruction" class="text-xs sm:text-sm text-slate-200">
+                  Mueve el ratón o el dedo por el visor ecográfico hasta fijar la lesión sospechosa y mantener la sonda sobre ella al 100%.
+                </p>
+              </div>
+
+              <!-- Panel de preguntas que se desbloquea al hallar la lesión -->
+              <div id="act1-quiz-area" class="hidden space-y-3">
+                <div class="p-3 rounded-xl bg-pink-950/30 border border-pink-500/40 text-xs text-pink-200">
+                  <strong>HALLAZGO CONFIRMADO:</strong> En <strong>CSE de Mama Izquierda (MI)</strong> se visualiza una lesión sólida, hipoecogénica, de morfología irregular y bordes levemente espiculados de <strong>11 × 10,6 mm</strong>.
+                </div>
+
+                <div id="act1-q1">
+                  <div class="text-xs font-mono-tech text-cyan-300 font-bold mb-1.5">1. ¿Qué categoría BI-RADS y procedimiento inicial corresponden?</div>
+                  <div class="grid grid-cols-1 gap-2">
+                    <button onclick="answerAct1Q1('birads3')" class="btn-arcade text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+                      A) BI-RADS 3 · Control ecográfico en 6 meses
+                    </button>
+                    <button onclick="answerAct1Q1('birads5')" class="btn-arcade text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+                      B) BI-RADS 5 · Realizar BAG (Biopsia con Aguja Gruesa)
+                    </button>
+                    <button onclick="answerAct1Q1('birads2')" class="btn-arcade text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+                      C) BI-RADS 2 · Quiste simple benigno, alta médica
+                    </button>
+                  </div>
+                </div>
+
+                <div id="act1-q2" class="hidden">
+                  <div class="text-xs font-mono-tech text-amber-300 font-bold mb-1.5">2. BONUS DETECTIVE: Revisa los Antecedentes Familiares (Madre ca. mama 50a, Hermana ca. ovario 50a, Padre ca. próstata 70a). ¿Qué sospecha clínica despierta?</div>
+                  <div class="grid grid-cols-1 gap-2">
+                    <button onclick="answerAct1Q2('brca')" class="btn-arcade text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+                      A) Síndrome de cáncer de mama/ovario hereditario (estudio BRCA1/2)
+                    </button>
+                    <button onclick="answerAct1Q2('esporadico')" class="btn-arcade text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+                      B) Ninguna relación; son tumores totalmente independientes por edad avanzada
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-[11px] font-mono-tech text-slate-400">
+              <span>TÉCNICA: ECOGRAFÍA ALTA FRECUENCIA</span>
+              <span class="text-cyan-400">OBJETIVO: CSE MAMA IZQ</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      initEcoCanvas();
+    }
+
+    function initEcoCanvas() {
+      const canvas = document.getElementById('eco-canvas');
+      if (!canvas) return;
+
+      let probe = { nx: 0.25, ny: 0.5 };
+      // Lesión oculta en el lado derecho del visor (Mama Izquierda, CSE)
+      const target = { nx: 0.74, ny: 0.44, r: 0.085 };
+      let lastBeep = 0;
+
+      const handleMove = (e) => {
+        const pos = getPointerPos(canvas, e);
+        probe.nx = Math.max(0.08, Math.min(0.92, pos.nx));
+        probe.ny = Math.max(0.15, Math.min(0.85, pos.ny));
+      };
+
+      canvas.addEventListener('mousemove', handleMove);
+      canvas.addEventListener('touchmove', handleMove, { passive: true });
+      canvas.addEventListener('touchstart', handleMove, { passive: true });
+
+      setupResponsiveCanvas(canvas);
+
+      function renderLoop(now) {
+        if (GameState.act !== 1) return;
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        const ctx = canvas.getContext('2d');
+
+        // Fondo ecográfico oscuro con ruido granular simulado
+        ctx.fillStyle = '#04080f';
+        ctx.fillRect(0, 0, w, h);
+
+        // División anatómica: Mama Derecha (izquierda pantalla) vs Mama Izquierda (derecha pantalla)
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.2)';
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.moveTo(w * 0.5, 0);
+        ctx.lineTo(w * 0.5, h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.45)';
+        ctx.font = 'bold 11px "JetBrains Mono", monospace';
+        ctx.fillText('MAMA DERECHA (DOLOR)', 16, 24);
+        ctx.fillText('MAMA IZQUIERDA (CSE)', w * 0.5 + 16, 24);
+
+        const px = probe.nx * w;
+        const py = probe.ny * h;
+        const tx = target.nx * w;
+        const ty = target.ny * h;
+
+        const dist = Math.hypot(probe.nx - target.nx, probe.ny - target.ny);
+        const isLocked = dist < target.r;
+
+        // Haz de ultrasonido proyectado por la sonda
+        const beamRadius = Math.min(w, h) * 0.28;
+        const grad = ctx.createRadialGradient(px, py, 10, px, py, beamRadius);
+        grad.addColorStop(0, 'rgba(180, 225, 255, 0.30)');
+        grad.addColorStop(0.65, 'rgba(60, 130, 190, 0.12)');
+        grad.addColorStop(1, 'rgba(4, 8, 15, 0)');
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(px, py, beamRadius, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.clip();
+
+        // Capas fibroglandulares y estrías ecogénicas dentro del haz
+        for (let i = 0; i < 18; i++) {
+          const ly = (h / 18) * i + Math.sin(now * 0.002 + i) * 3;
+          ctx.strokeStyle = i % 3 === 0 ? 'rgba(203, 213, 225, 0.22)' : 'rgba(100, 116, 139, 0.14)';
+          ctx.lineWidth = i % 2 === 0 ? 2 : 1;
+          ctx.beginPath();
+          ctx.moveTo(0, ly);
+          ctx.bezierCurveTo(w * 0.3, ly + 10, w * 0.7, ly - 10, w, ly + 4);
+          ctx.stroke();
+        }
+
+        // Sombra acústica posterior y nódulo hipoecogénico irregular espiculado (11 x 10.6 mm)
+        const shadowGrad = ctx.createLinearGradient(tx, ty, tx, ty + 140);
+        shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.85)');
+        shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = shadowGrad;
+        ctx.fillRect(tx - 24, ty, 48, 140);
+
+        // Nódulo espiculado irregular
+        ctx.fillStyle = '#090d16';
+        ctx.strokeStyle = isLocked ? '#ff2a85' : 'rgba(226, 232, 240, 0.55)';
+        ctx.lineWidth = isLocked ? 2.5 : 1.5;
+        ctx.beginPath();
+        const spikes = 14;
+        for (let i = 0; i <= spikes; i++) {
+          const angle = (i / spikes) * Math.PI * 2;
+          const rMod = (i % 2 === 0 ? 26 : 17) + Math.sin(i * 3) * 3;
+          const vx = tx + Math.cos(angle) * rMod * 1.05;
+          const vy = ty + Math.sin(angle) * rMod * 0.95;
+          if (i === 0) ctx.moveTo(vx, vy);
+          else ctx.lineTo(vx, vy);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Aguja de BAG penetrando si ya se respondió BI-RADS 5
+        if (GameState.act1.step === 'bag_done') {
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(tx + 130, ty - 45);
+          ctx.lineTo(tx - 18, ty + 8);
+          ctx.stroke();
+          ctx.fillStyle = '#00f0ff';
+          ctx.font = 'bold 11px "JetBrains Mono"';
+          ctx.fillText('AGUJA BAG EN LESIÓN', tx + 22, ty - 34);
+        }
+
+        ctx.restore();
+
+        // Retícula de la sonda
+        ctx.strokeStyle = isLocked ? '#ff2a85' : '#00f0ff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(px, py, 22, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Actualizar progreso si la sonda está encima del nódulo
+        const coordsEl = document.getElementById('eco-coords');
+        if (coordsEl) {
+          coordsEl.textContent = probe.nx < 0.5
+            ? 'MAMA DCHA · PARÉNQUIMA SIN LESIONES FOCALES'
+            : (isLocked ? '⚠️ ¡LESIÓN HIPOICOGÉNICA ESPICULADA DETECTADA!' : 'MAMA IZQ (CSE) · RASTREANDO...');
+        }
+
+        if (isLocked && !GameState.act1.foundLesion) {
+          GameState.act1.scanProgress = Math.min(100, GameState.act1.scanProgress + 1.45);
+          const bar = document.getElementById('eco-progress-bar');
+          if (bar) bar.style.width = `${GameState.act1.scanProgress}%`;
+
+          if (now - lastBeep > 160) {
+            SoundFX.geiger(GameState.act1.scanProgress / 100);
+            lastBeep = now;
+          }
+
+          if (GameState.act1.scanProgress >= 100) {
+            GameState.act1.foundLesion = true;
+            SoundFX.success();
+            addScore(400, 'HALLAZGO ECO');
+            logDossier('Ecografía MI (CSE): Nódulo sólido hipoecogénico irregular, bordes levemente espiculados, 11 x 10,6 mm.');
+            document.getElementById('act1-quiz-area').classList.remove('hidden');
+            document.getElementById('act1-instruction').textContent = '¡Lesión fijada en CSE de mama izquierda! Clasifícala y solicita la prueba diagnóstica adecuada.';
+            showFeedback('success', '¡LESIÓN LOCALIZADA EN MAMA IZQUIERDA!', 'Nódulo irregular de 11 x 10,6 mm en CSE. Procede a categorizar el BI-RADS.');
+          }
+        }
+
+        activeAnimationFrame = requestAnimationFrame(renderLoop);
+      }
+
+      activeAnimationFrame = requestAnimationFrame(renderLoop);
+    }
+
+    function answerAct1Q1(choice) {
+      if (choice === 'birads5') {
+        SoundFX.success();
+        GameState.act1.step = 'bag_done';
+        addScore(500, 'BI-RADS 5 + BAG');
+        logDossier('Clasificación radiológica: BI-RADS 5. Se realiza Biopsia con Aguja Gruesa (BAG) ecodirigida.');
+        document.getElementById('act1-q1').innerHTML = `
+          <div class="p-2.5 rounded-lg bg-emerald-950/50 border border-emerald-500/50 text-xs text-emerald-300 font-mono-tech">
+            ✔ BI-RADS 5 CONFIRMADO · CILINDROS DE BAG EXTRAÍDOS
+          </div>
+        `;
+        document.getElementById('act1-q2').classList.remove('hidden');
+        showFeedback('success', '¡EXACTO! BI-RADS 5', 'Alta sospecha de malignidad (>95%). La BAG ecodirigida confirma la toma de cilindros tisulares.');
+      } else {
+        penalize(15, 'CATEGORIZACIÓN INCORRECTA', 'Una lesión sólida, irregular y espiculada es altamente sospechosa de malignidad (BI-RADS 5) y exige biopsia inmediata (BAG).');
+      }
+    }
+
+    function answerAct1Q2(choice) {
+      if (choice === 'brca') {
+        SoundFX.bonus();
+        addScore(450, 'SOSPECHA BRCA');
+        GameState.medals.add('Genetista Perspicaz');
+        logDossier('Agregación familiar significativa (mama, ovario, próstata): indicación de consejo genético (BRCA1/2).');
+        showFeedback('bonus', '¡DEDUCCIÓN DE DETECTIVE!', 'La agregación de ca. de mama (50a), ovario (50a) y próstata (70a) sugiere predisposición hereditaria (BRCA). Pasamos al laboratorio de Anatomía Patológica.');
+        setTimeout(() => renderAct2(), 1700);
+      } else {
+        penalize(12, 'PISTA FAMILIAR PASADA POR ALTO', 'Tres familiares de primer grado con tumores del espectro mama-ovario-próstata en edades jóvenes obligan a sospechar síndrome hereditario (BRCA).');
+      }
+    }
+
+    /* ==========================================================================
+       5. ACTO 2: EL MICROSCOPIO DE LA BAG (HISTOLOGÍA H&E)
+       ========================================================================== */
+    function renderAct2() {
+      stopCanvasLoop();
+      GameState.act = 2;
+      GameState.act2 = { zoom: '2x', foundZones: [false, false], clickedArtifact: false, step: 'micro' };
+      updateHUD();
+
+      const app = document.getElementById('app-container');
+      app.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <!-- Microscopio Interactivo -->
+          <div class="lg:col-span-7 bg-[#0a1122] neon-border-cyan rounded-2xl p-4 flex flex-col">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <span class="text-[10px] font-mono-tech text-cyan-400 uppercase tracking-widest">Acto 2 · Histopatología H&E</span>
+                <h2 class="font-arcade text-base sm:text-lg font-bold text-white">MICROSCOPIO: CILINDROS DE BAG</h2>
+              </div>
+              <div class="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-700">
+                <button id="btn-zoom-2x" onclick="setAct2Zoom('2x')" class="btn-arcade px-3 py-1.5 text-xs font-mono-tech bg-cyan-500 text-slate-950">
+                  2x PANORÁMICA
+                </button>
+                <button id="btn-zoom-10x" onclick="setAct2Zoom('10x')" class="btn-arcade px-3 py-1.5 text-xs font-mono-tech text-slate-300 hover:bg-slate-800">
+                  10x DETALLE
+                </button>
+              </div>
+            </div>
+
+            <div class="relative flex-1 min-h-[320px] sm:min-h-[380px] bg-[#f8f4f9] rounded-xl overflow-hidden border-2 border-slate-700 cursor-crosshair">
+              <canvas id="micro-bag-canvas"></canvas>
+              <div id="micro-bag-hint" class="absolute bottom-3 left-3 right-3 bg-slate-950/85 text-cyan-200 border border-cyan-500/40 px-3 py-2 rounded-lg text-xs font-mono-tech pointer-events-none">
+                MODO 2x: Localiza y pulsa las 2 zonas hipercelulares densas candidatas a infiltración tumoral (¡evita el artefacto violeta y la grasa!).
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel de Análisis Histológico -->
+          <div class="lg:col-span-5 bg-[#0a1122] border border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700">
+                <div class="font-arcade text-xs text-cyan-300 font-bold mb-1">GUÍA DE LECTURA HISTOLÓGICA</div>
+                <ul class="text-xs text-slate-300 space-y-1.5">
+                  <li><span class="text-emerald-400 font-bold">● Tejido sano:</span> Adipocitos vacuolados y conducto preexistente ordenado con luz conservada.</li>
+                  <li><span class="text-purple-400 font-bold">● Artefacto técnico:</span> Banda violeta oscura por pliegue/tinta en el Cilindro 2 (¡No es tumor!).</li>
+                  <li><span class="text-rose-400 font-bold">● Hallazgo patológico:</span> Túbulos pequeños y angulados infiltrando un estroma colágeno denso (desmoplasia).</li>
+                </ul>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2.5">
+                <div id="bag-target-1" class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-mono-tech text-slate-400">
+                  [ ] Foco Cilindro 1
+                </div>
+                <div id="bag-target-2" class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-mono-tech text-slate-400">
+                  [ ] Foco Cilindro 2
+                </div>
+              </div>
+
+              <!-- Cuestionario Bloom-Richardson BAG -->
+              <div id="act2-grading-box" class="hidden p-4 rounded-xl bg-pink-950/25 border border-pink-500/40 space-y-3">
+                <div class="font-arcade text-xs text-pink-300 font-bold">GRADING DE BLOOM-RICHARDSON (BAG)</div>
+                <p class="text-xs text-slate-200 leading-relaxed">
+                  A <strong>10x</strong> observas: alta formación tubular (<strong>1 punto</strong>), atipia nuclear moderada con núcleos irregulares (<strong>2 puntos</strong>) y escasas mitosis (<strong>1 punto</strong>). ¿Cuál es el diagnóstico histológico de la BAG?
+                </p>
+                <div class="space-y-2">
+                  <button onclick="answerAct2Grading('g1')" class="btn-arcade w-full text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+                    A) Carcinoma ductal infiltrante NOS · Grado 1 (4 pts: 1+2+1), sin invasión linfovascular ni perineural
+                  </button>
+                  <button onclick="answerAct2Grading('g3')" class="btn-arcade w-full text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+                    B) Carcinoma lobulillar in situ · Grado 3 (9 pts), con invasión vascular masiva
+                  </button>
+                  <button onclick="answerAct2Grading('fibroadenoma')" class="btn-arcade w-full text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+                    C) Fibroadenoma benigno con cambios fibroquísticos
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-[11px] font-mono-tech text-slate-400">
+              <span>TINCIÓN: HEMATOXILINA-EOSINA</span>
+              <span class="text-pink-400">DESMOPLASIA POSITIVA</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      initBagCanvas();
+    }
+
+    function setAct2Zoom(z) {
+      SoundFX.click();
+      GameState.act2.zoom = z;
+      const b2 = document.getElementById('btn-zoom-2x');
+      const b10 = document.getElementById('btn-zoom-10x');
+      if (z === '2x') {
+        b2.className = 'btn-arcade px-3 py-1.5 text-xs font-mono-tech bg-cyan-500 text-slate-950';
+        b10.className = 'btn-arcade px-3 py-1.5 text-xs font-mono-tech text-slate-300 hover:bg-slate-800';
+        document.getElementById('micro-bag-hint').textContent = 'MODO 2x: Haz clic sobre las 2 zonas densas e hipercelulares de los cilindros.';
+      } else {
+        b10.className = 'btn-arcade px-3 py-1.5 text-xs font-mono-tech bg-cyan-500 text-slate-950';
+        b2.className = 'btn-arcade px-3 py-1.5 text-xs font-mono-tech text-slate-300 hover:bg-slate-800';
+        document.getElementById('micro-bag-hint').textContent = 'MODO 10x: Observa los túbulos pequeños angulados rodeados de estroma rosado desmoplásico junto al conducto sano.';
+      }
+      drawBagCanvas();
+    }
+
+    let drawBagCanvas = () => {};
+
+    function initBagCanvas() {
+      const canvas = document.getElementById('micro-bag-canvas');
+      if (!canvas) return;
+
+      // Coordenadas normalizadas de los 2 focos tumorales, el artefacto y el conducto sano
+      const focus1 = { nx: 0.72, ny: 0.28, r: 0.09 };
+      const focus2 = { nx: 0.78, ny: 0.74, r: 0.09 };
+      const artifact = { nx: 0.36, ny: 0.68, r: 0.06 };
+      const healthyDuct = { nx: 0.44, ny: 0.28, r: 0.06 };
+
+      drawBagCanvas = () => {
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        const ctx = canvas.getContext('2d');
+
+        // Fondo portaobjetos cristal claro
+        ctx.fillStyle = '#f6eff7';
+        ctx.fillRect(0, 0, w, h);
+
+        if (GameState.act2.zoom === '2x') {
+          // CILINDRO 1 (Superior)
+          ctx.save();
+          ctx.fillStyle = '#f2c6de';
+          ctx.strokeStyle = '#c084ac';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(w * 0.06, h * 0.16, w * 0.86, h * 0.24, 28);
+          ctx.fill();
+          ctx.stroke();
+
+          // Zona grasa vacuolada izquierda (tejido sano)
+          ctx.fillStyle = '#ffffff';
+          for (let i = 0; i < 28; i++) {
+            const gx = w * (0.09 + (i % 7) * 0.032);
+            const gy = h * (0.20 + Math.floor(i / 7) * 0.042);
+            ctx.beginPath();
+            ctx.arc(gx, gy, 6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Conducto sano en cilindro 1
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#6b21a8';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(healthyDuct.nx * w, healthyDuct.ny * h, 11, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Zona hipercelular tumoral derecha en Cilindro 1
+          ctx.fillStyle = '#a8559c';
+          ctx.beginPath();
+          ctx.ellipse(focus1.nx * w, focus1.ny * h, w * 0.11, h * 0.09, 0.1, 0, Math.PI * 2);
+          ctx.fill();
+          // Puntos nucleares densos
+          ctx.fillStyle = '#4c1d95';
+          for (let i = 0; i < 45; i++) {
+            const ax = focus1.nx * w + Math.cos(i * 1.7) * (w * 0.08) * ((i % 5) / 5);
+            const ay = focus1.ny * h + Math.sin(i * 2.3) * (h * 0.06) * ((i % 4) / 4);
+            ctx.fillRect(ax, ay, 2.5, 2.5);
+          }
+
+          // CILINDRO 2 (Inferior)
+          ctx.fillStyle = '#edd0e3';
+          ctx.strokeStyle = '#c084ac';
+          ctx.beginPath();
+          ctx.roundRect(w * 0.08, h * 0.58, w * 0.84, h * 0.24, 24);
+          ctx.fill();
+          ctx.stroke();
+
+          // ARTEFACTO: Banda violeta oscura (pliegue/tinta)
+          ctx.fillStyle = '#3b0764';
+          ctx.fillRect(artifact.nx * w - 7, h * 0.57, 14, h * 0.26);
+
+          // Zona hipercelular tumoral derecha en Cilindro 2
+          ctx.fillStyle = '#9d4edd';
+          ctx.beginPath();
+          ctx.ellipse(focus2.nx * w, focus2.ny * h, w * 0.10, h * 0.085, -0.1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#3b0764';
+          for (let i = 0; i < 40; i++) {
+            const ax = focus2.nx * w + Math.cos(i * 1.9) * (w * 0.07) * ((i % 5) / 5);
+            const ay = focus2.ny * h + Math.sin(i * 2.1) * (h * 0.055) * ((i % 4) / 4);
+            ctx.fillRect(ax, ay, 2.5, 2.5);
+          }
+
+          // Etiquetas de los cilindros
+          ctx.fillStyle = '#1e293b';
+          ctx.font = 'bold 11px "JetBrains Mono"';
+          ctx.fillText('CILINDRO 1 (BAG)', w * 0.07, h * 0.13);
+          ctx.fillText('CILINDRO 2 (BAG)', w * 0.09, h * 0.55);
+
+          // Marcar focos ya descubiertos
+          [focus1, focus2].forEach((f, idx) => {
+            if (GameState.act2.foundZones[idx]) {
+              ctx.strokeStyle = '#ff2a85';
+              ctx.lineWidth = 3;
+              ctx.beginPath();
+              ctx.arc(f.nx * w, f.ny * h, 28, 0, Math.PI * 2);
+              ctx.stroke();
+              ctx.fillStyle = '#be185d';
+              ctx.fillText(`INFILTRADO #${idx + 1}`, f.nx * w - 38, f.ny * h - 32);
+            }
+          });
+
+          ctx.restore();
+        } else {
+          // VISTA 10x DETALLE: Estroma colágeno rosado (desmoplasia) + Conducto sano + Túbulos angulados
+          ctx.fillStyle = '#f9d8e6';
+          ctx.fillRect(0, 0, w, h);
+
+          // Fibras de colágeno desmoplásico (onduladas)
+          ctx.strokeStyle = '#ec9ec0';
+          ctx.lineWidth = 3;
+          for (let y = 12; y < h; y += 16) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.bezierCurveTo(w * 0.35, y + 14, w * 0.65, y - 14, w, y + 6);
+            ctx.stroke();
+          }
+
+          // Conducto sano de referencia arriba (epitelio cilíndrico ordenado y luz con secreción)
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#6d28d9';
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.arc(w * 0.55, h * 0.16, 36, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#1e293b';
+          ctx.font = 'bold 11px "JetBrains Mono"';
+          ctx.fillText('CONDUCTO SANO (REFERENCIA)', w * 0.55 - 78, h * 0.16 + 50);
+
+          // Túbulos pequeños y angulados infiltrando sin orden el estroma
+          const tubules = [
+            { x: 0.22, y: 0.45, a: 0.3 }, { x: 0.38, y: 0.58, a: -0.4 },
+            { x: 0.52, y: 0.48, a: 0.8 }, { x: 0.68, y: 0.55, a: -0.2 },
+            { x: 0.30, y: 0.76, a: 0.5 }, { x: 0.60, y: 0.75, a: -0.6 },
+            { x: 0.80, y: 0.42, a: 0.2 }, { x: 0.18, y: 0.68, a: -0.5 }
+          ];
+          tubules.forEach(t => {
+            ctx.save();
+            ctx.translate(t.x * w, t.y * h);
+            ctx.rotate(t.a);
+            ctx.fillStyle = '#f3e8ff';
+            ctx.strokeStyle = '#581c87';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(-16, -8);
+            ctx.lineTo(14, -11);
+            ctx.lineTo(19, 7);
+            ctx.lineTo(-11, 12);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+          });
+
+          ctx.fillStyle = '#831843';
+          ctx.font = 'bold 12px "JetBrains Mono"';
+          ctx.fillText('TÚBULOS ANGULADOS INFILTRANTES + DESMOPLASIA (10x)', 16, h - 16);
+        }
+      };
+
+      canvas.addEventListener('click', (e) => {
+        if (GameState.act !== 2) return;
+        const pos = getPointerPos(canvas, e);
+
+        if (GameState.act2.zoom === '10x') {
+          showFeedback('success', 'VISTA 10x DE ALTA RESOLUCIÓN', 'Observa los túbulos pequeños y angulados con núcleos grado 2 infiltrando el estroma colágeno denso.');
+          return;
+        }
+
+        // Comprobar artefacto
+        if (Math.hypot(pos.nx - artifact.nx, pos.ny - artifact.ny) < artifact.r) {
+          GameState.act2.clickedArtifact = true;
+          penalize(15, '¡CUIDADO! ARTEFACTO TÉCNICO', 'Esa banda violeta oscura en el cilindro 2 es un pliegue o resto de tinta, no tejido tumoral.');
+          return;
+        }
+
+        // Comprobar conducto sano
+        if (Math.hypot(pos.nx - healthyDuct.nx, pos.ny - healthyDuct.ny) < healthyDuct.r) {
+          penalize(10, 'TEJIDO MAMARIO SANO', 'Ese es un conducto preexistente normal con epitelio ordenado y luz conservada. Busca las zonas densas tumorales.');
+          return;
+        }
+
+        // Comprobar focos tumorales
+        [focus1, focus2].forEach((f, idx) => {
+          if (Math.hypot(pos.nx - f.nx, pos.ny - f.ny) < f.r && !GameState.act2.foundZones[idx]) {
+            GameState.act2.foundZones[idx] = true;
+            SoundFX.success();
+            addScore(350, `FOCO #${idx + 1}`, pos.clientX, pos.clientY);
+            const badge = document.getElementById(`bag-target-${idx + 1}`);
+            badge.className = 'p-2.5 rounded-lg bg-emerald-950/60 border border-emerald-400 text-xs font-mono-tech text-emerald-300 font-bold';
+            badge.textContent = `[✔] Foco Cilindro ${idx + 1}`;
+            drawBagCanvas();
+          }
+        });
+
+        if (GameState.act2.foundZones[0] && GameState.act2.foundZones[1]) {
+          if (!GameState.act2.clickedArtifact) {
+            GameState.medals.add('Cazador de Artefactos');
+          }
+          setAct2Zoom('10x');
+          document.getElementById('act2-grading-box').classList.remove('hidden');
+          showFeedback('success', '¡AMBAS ZONAS INFILTRANTES LOCALIZADAS!', 'Cambiando automáticamente a 10x para puntuar el sistema de Bloom-Richardson.');
+        }
+      });
+
+      setupResponsiveCanvas(canvas, drawBagCanvas);
+    }
+
+    function answerAct2Grading(choice) {
+      if (choice === 'g1') {
+        SoundFX.success();
+        addScore(550, 'DIAGNÓSTICO BAG');
+        logDossier('BAG Mama Izquierda (CSE): Carcinoma ductal infiltrante NOS grado 1 (1+2+1). Sin invasión linfovascular ni perineural.');
+        showFeedback('success', '¡DIAGNÓSTICO DE BIOPSIA CORRECTO!', 'Carcinoma ductal infiltrante tipo NOS Grado 1 en la BAG. Ahora determinaremos su perfil inmunohistoquímico.');
+        setTimeout(() => renderAct3(), 1600);
+      } else {
+        penalize(15, 'PUNTUACIÓN ERRÓNEA', 'Suma los parámetros de la BAG: Formación tubular (1) + Grado nuclear (2) + Índice mitótico (1) = 4 puntos → Grado 1.');
+      }
+    }
+
+    /* ==========================================================================
+       6. ACTO 3: LABORATORIO DE INMUNOHISTOQUÍMICA (EL CÓDIGO MOLECULAR)
+       ========================================================================== */
+    function renderAct3() {
+      stopCanvasLoop();
+      GameState.act = 3;
+      GameState.act3 = { stained: { RE: false, RP: false, KI67: false, HER2: false }, activeMarker: 'RE', step: 'lab' };
+      updateHUD();
+
+      const app = document.getElementById('app-container');
+      app.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <!-- Placa de Tinción IHQ Interactiva -->
+          <div class="lg:col-span-7 bg-[#0a1122] neon-border-cyan rounded-2xl p-4 flex flex-col">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <span class="text-[10px] font-mono-tech text-cyan-400 uppercase tracking-widest">Acto 3 · Perfil Molecular</span>
+                <h2 class="font-arcade text-base sm:text-lg font-bold text-white">LABORATORIO DE INMUNOHISTOQUÍMICA</h2>
+              </div>
+              <span id="ihq-badge-mag" class="px-2.5 py-1 rounded bg-slate-900 border border-cyan-500/40 text-xs font-mono-tech text-cyan-300">
+                RE (40x) · SIN REVELAR
+              </span>
+            </div>
+
+            <!-- Botonera de Anticuerpos -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+              <button id="tab-ihq-RE" onclick="selectIHQMarker('RE')" class="btn-arcade py-2 px-2 text-xs font-mono-tech bg-cyan-500 text-slate-950">
+                1. RE (40x)
+              </button>
+              <button id="tab-ihq-RP" onclick="selectIHQMarker('RP')" class="btn-arcade py-2 px-2 text-xs font-mono-tech bg-slate-900 border border-slate-700 text-slate-300">
+                2. RP (40x)
+              </button>
+              <button id="tab-ihq-KI67" onclick="selectIHQMarker('KI67')" class="btn-arcade py-2 px-2 text-xs font-mono-tech bg-slate-900 border border-slate-700 text-slate-300">
+                3. Ki-67 (20x)
+              </button>
+              <button id="tab-ihq-HER2" onclick="selectIHQMarker('HER2')" class="btn-arcade py-2 px-2 text-xs font-mono-tech bg-slate-900 border border-slate-700 text-slate-300">
+                4. HER2 (20x)
+              </button>
+            </div>
+
+            <div class="relative flex-1 min-h-[290px] sm:min-h-[340px] bg-slate-900 rounded-xl overflow-hidden border-2 border-slate-700">
+              <canvas id="ihq-canvas"></canvas>
+              <div class="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 bg-slate-950/90 px-3 py-2 rounded-xl border border-cyan-500/40">
+                <span id="ihq-status-text" class="text-xs font-mono-tech text-slate-200">Pulsa "APLICAR ANTICUERPO" para revelar la tinción DAB.</span>
+                <button id="btn-apply-stain" onclick="applyCurrentStain()" class="btn-arcade bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-xs font-arcade px-4 py-2">
+                  🧪 APLICAR ANTICUERPO
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel de Deducción Fenotípica -->
+          <div class="lg:col-span-5 bg-[#0a1122] border border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="font-arcade text-xs text-cyan-300 font-bold">REGISTRO DE BIOMARCADORES (0/4)</div>
+              <div class="grid grid-cols-2 gap-2 text-xs font-mono-tech">
+                <div id="res-ihq-RE" class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">RE: Pendiente</div>
+                <div id="res-ihq-RP" class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">RP: Pendiente</div>
+                <div id="res-ihq-KI67" class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">Ki-67: Pendiente</div>
+                <div id="res-ihq-HER2" class="p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">HER2: Pendiente</div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700 text-xs text-slate-300 leading-relaxed">
+                <strong>Recuerda:</strong> Los receptores hormonales (RE, RP) y el Ki-67 son <strong>nucleares</strong> (núcleos marrones = positivos; azules = contratinción de hematoxilina). El <strong>HER2</strong> evalúa la <strong>membrana celular</strong>.
+              </div>
+
+              <!-- Decisión Final Acto 3 -->
+              <div id="act3-phenotype-box" class="hidden p-4 rounded-xl bg-pink-950/30 border border-pink-500/40 space-y-2.5">
+                <div class="font-arcade text-xs text-pink-300 font-bold">CLASIFICACIÓN INTRÍNSECA Y TERAPIA</div>
+                <p class="text-xs text-slate-200">
+                  Con <strong>RE+ (100%, 3+)</strong>, <strong>RP-</strong>, <strong>Ki-67 del 21%</strong> y <strong>HER2 negativo (0)</strong>, ¿qué subtipo molecular presenta y qué tratamiento está indicado?
+                </p>
+                <div class="space-y-2">
+                  <button onclick="answerAct3Phenotype('luminalB')" class="btn-arcade w-full text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+                    A) Fenotipo Luminal B (HER2 neg) · Hormonodependiente (candidata a hormonoterapia, NO anti-HER2)
+                  </button>
+                  <button onclick="answerAct3Phenotype('her2')" class="btn-arcade w-full text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+                    B) Fenotipo HER2 enriquecido · Requiere trastuzumab anti-HER2 exclusivo
+                  </button>
+                  <button onclick="answerAct3Phenotype('triple')" class="btn-arcade w-full text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+                    C) Carcinoma Triple Negativo (Basal-like) · Sin respuesta a terapia hormonal
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-[11px] font-mono-tech text-slate-400">
+              <span>CLON HER2: SP3 VITRO SA</span>
+              <span class="text-amber-400">UMBRAL Ki-67: 21%</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      initIHQCanvas();
+    }
+
+    let drawIHQCanvas = () => {};
+
+    function selectIHQMarker(marker) {
+      SoundFX.click();
+      GameState.act3.activeMarker = marker;
+      ['RE', 'RP', 'KI67', 'HER2'].forEach(m => {
+        const btn = document.getElementById(`tab-ihq-${m}`);
+        const done = GameState.act3.stained[m];
+        if (m === marker) {
+          btn.className = 'btn-arcade py-2 px-2 text-xs font-mono-tech bg-cyan-500 text-slate-950 font-bold';
+        } else if (done) {
+          btn.className = 'btn-arcade py-2 px-2 text-xs font-mono-tech bg-emerald-950/60 border border-emerald-500/50 text-emerald-300';
+        } else {
+          btn.className = 'btn-arcade py-2 px-2 text-xs font-mono-tech bg-slate-900 border border-slate-700 text-slate-300';
+        }
+      });
+
+      const mag = (marker === 'RE' || marker === 'RP') ? '40x' : '20x';
+      const isDone = GameState.act3.stained[marker];
+      document.getElementById('ihq-badge-mag').textContent = `${marker} (${mag}) · ${isDone ? 'REVELADO' : 'SIN REVELAR'}`;
+      document.getElementById('btn-apply-stain').disabled = isDone;
+      updateIHQDescription();
+      drawIHQCanvas();
+    }
+
+    function updateIHQDescription() {
+      const m = GameState.act3.activeMarker;
+      const done = GameState.act3.stained[m];
+      const textEl = document.getElementById('ihq-status-text');
+      if (!done) {
+        textEl.textContent = `Muestra preparada para ${m}. Pulsa "APLICAR ANTICUERPO" para revelar.`;
+        return;
+      }
+      const desc = {
+        RE: 'RE POSITIVO (3+ en 100%): Núcleos tumorales marrón intenso; estroma azul (control negativo interno).',
+        RP: 'RP NEGATIVO: Ningún núcleo marrón; solo contratinción azul de hematoxilina.',
+        KI67: 'Ki-67 POSITIVO (21%): Aproximadamente 1 de cada 5 núcleos tumorales en división (marrón).',
+        HER2: 'HER2 NEGATIVO (0): Ausencia total de tinción en membranas celulares.'
+      };
+      textEl.textContent = desc[m];
+    }
+
+    function applyCurrentStain() {
+      const m = GameState.act3.activeMarker;
+      if (GameState.act3.stained[m]) return;
+      GameState.act3.stained[m] = true;
+      SoundFX.stain();
+      addScore(250, `TINCIÓN ${m}`);
+
+      const labels = {
+        RE: 'RE: POSITIVO (3+, 100%)',
+        RP: 'RP: NEGATIVO (0%)',
+        KI67: 'Ki-67: POSITIVO (21%)',
+        HER2: 'HER2: NEGATIVO (0)'
+      };
+      const resBox = document.getElementById(`res-ihq-${m}`);
+      resBox.className = 'p-2.5 rounded-lg bg-emerald-950/50 border border-emerald-500/50 text-emerald-300 font-bold';
+      resBox.textContent = labels[m];
+
+      selectIHQMarker(m);
+
+      const allDone = Object.values(GameState.act3.stained).every(Boolean);
+      if (allDone) {
+        document.getElementById('act3-phenotype-box').classList.remove('hidden');
+        showFeedback('success', '¡PANEL INMUNOHISTOQUÍMICO COMPLETADO!', 'Analiza los 4 marcadores en conjunto para clasificar el fenotipo tumoral.');
+      }
+    }
+
+    function initIHQCanvas() {
+      const canvas = document.getElementById('ihq-canvas');
+      if (!canvas) return;
+
+      // Generar células tumorales en nidos y células estromales de control interno
+      const tumorCells = [];
+      for (let i = 0; i < 48; i++) {
+        const cluster = i % 3;
+        const cx = 0.22 + cluster * 0.28 + Math.cos(i * 2.1) * 0.09;
+        const cy = 0.45 + Math.sin(i * 1.7) * 0.22;
+        tumorCells.push({
+          nx: cx,
+          ny: cy,
+          r: 7 + (i % 3),
+          isKi67Pos: i % 5 === 0 // ~21% positivos
+        });
+      }
+
+      const stromalCells = [];
+      for (let i = 0; i < 24; i++) {
+        stromalCells.push({
+          nx: 0.08 + ((i * 37) % 84) / 100,
+          ny: 0.14 + ((i * 53) % 72) / 100
+        });
+      }
+
+      drawIHQCanvas = () => {
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        const ctx = canvas.getContext('2d');
+        const m = GameState.act3.activeMarker;
+        const revealed = GameState.act3.stained[m];
+
+        // Fondo azul pálido hematoxilina
+        ctx.fillStyle = '#e7edf8';
+        ctx.fillRect(0, 0, w, h);
+
+        // Estroma fibroso tenue
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 2;
+        for (let y = 20; y < h; y += 22) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.quadraticCurveTo(w * 0.5, y + 10, w, y - 5);
+          ctx.stroke();
+        }
+
+        // Células del estroma (siempre azules -> control negativo interno)
+        stromalCells.forEach(s => {
+          ctx.fillStyle = '#64748b';
+          ctx.beginPath();
+          ctx.ellipse(s.nx * w, s.ny * h, 6, 2.5, 0.4, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Nidos de células tumorales
+        tumorCells.forEach(c => {
+          const x = c.nx * w;
+          const y = c.ny * h;
+
+          // Citoplasma / membrana
+          ctx.fillStyle = 'rgba(203, 213, 225, 0.65)';
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.arc(x, y, c.r + 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Núcleo según marcador y si está revelado
+          let nucleusColor = '#475569'; // Sin revelar
+          if (revealed) {
+            if (m === 'RE') nucleusColor = '#6b2c0c'; // 100% marrón intenso 3+
+            else if (m === 'RP') nucleusColor = '#3b5998'; // Negativo (azul hematoxilina)
+            else if (m === 'KI67') nucleusColor = c.isKi67Pos ? '#7c2d12' : '#3b5998'; // ~21% marrón
+            else if (m === 'HER2') nucleusColor = '#3b5998'; // Núcleos azules, membrana sin marrón (0)
+          }
+
+          ctx.fillStyle = nucleusColor;
+          ctx.beginPath();
+          ctx.arc(x, y, c.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Leyenda en esquina
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(12, 12, 235, 28);
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 11px "JetBrains Mono"';
+        ctx.fillText(`MARCADOR: ${m} | ESTADO: ${revealed ? 'REVELADO' : 'PENDIENTE'}`, 20, 30);
+      };
+
+      setupResponsiveCanvas(canvas, drawIHQCanvas);
+    }
+
+    function answerAct3Phenotype(choice) {
+      if (choice === 'luminalB') {
+        SoundFX.success();
+        addScore(600, 'FENOTIPO LUMINAL B');
+        logDossier('Inmunohistoquímica: RE+ (100%, 3+), RP-, Ki-67 21%, HER2 (0). Fenotipo Luminal B (HER2 negativo).');
+        showFeedback('success', '¡CÓDIGO MOLECULAR DESCIFRADO!', 'Fenotipo Luminal B (HER2-). Tumor hormonodependiente candidato a tratamiento hormonal. Pasamos a cirugía.');
+        setTimeout(() => renderAct4(), 1600);
+      } else {
+        penalize(15, 'PERFIL MOLECULAR INCORRECTO', 'Con RE+ (100%), RP-, HER2 (0) y proliferación intermedia (Ki-67 21%), corresponde a Luminal B (HER2 negativo).');
+      }
+    }
+
+    /* ==========================================================================
+       7. ACTO 4: QUIRÓFANO, LINFOGAMMAGRAFÍA Y MAPA DE MÁRGENES (TUMORECTOMÍA)
+       ========================================================================== */
+    function renderAct4() {
+      stopCanvasLoop();
+      GameState.act = 4;
+      GameState.act4 = { sentinelFound: false, wireVerified: false, marginsMeasured: [false, false, false, false], trapSolved: false, step: 'gamma' };
+      updateHUD();
+
+      const app = document.getElementById('app-container');
+      app.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <!-- Visor Quirúrgico Dual (Linfogammagrafía -> Pieza Tumorectomía) -->
+          <div class="lg:col-span-7 bg-[#0a1122] neon-border-cyan rounded-2xl p-4 flex flex-col">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <span id="act4-subtitle" class="text-[10px] font-mono-tech text-cyan-400 uppercase tracking-widest">Acto 4A · Medicina Nuclear y Marcaje</span>
+                <h2 id="act4-title" class="font-arcade text-base sm:text-lg font-bold text-white">LINFOGAMMAGRAFÍA (Tc99m-NANOCOLOIDE)</h2>
+              </div>
+              <span id="act4-mode-badge" class="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-400/50 text-xs font-mono-tech text-amber-300">
+                DOSIS: 0,148 mSv
+              </span>
+            </div>
+
+            <div class="relative flex-1 min-h-[330px] sm:min-h-[390px] bg-slate-950 rounded-xl overflow-hidden border-2 border-slate-700 cursor-crosshair">
+              <canvas id="surgery-canvas"></canvas>
+              <div id="act4-canvas-banner" class="absolute bottom-3 left-3 right-3 bg-slate-950/90 text-cyan-200 border border-cyan-500/40 px-3 py-2 rounded-lg text-xs font-mono-tech pointer-events-none">
+                PASO 4A: Pulsa en el foco de mayor captación axilar izquierda (Ganglio Centinela) tras inyección periareolar de Tc99m.
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel de Control Quirúrgico y Calibre Láser -->
+          <div class="lg:col-span-5 bg-[#0a1122] border border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+            <div id="act4-side-content" class="space-y-3">
+              <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700">
+                <div class="font-arcade text-xs text-cyan-300 font-bold mb-1">PROTOCOLO QUIRÚRGICO</div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Antes de la tumorectomía guiada por arpón metálico, se realiza <strong>linfogammagrafía con 1 mCi de 99mTc-nanocoloides</strong>. Identifica el <strong>Ganglio Centinela</strong> en axila izquierda (distínguelo del ganglio secundario craneal de menor intensidad).
+                </p>
+              </div>
+              <div class="p-3 rounded-xl bg-cyan-950/25 border border-cyan-500/30 text-xs font-mono-tech text-cyan-200">
+                ● Punto de inyección periareolar: Alta actividad.<br/>
+                ● Objetivo: Foco axilar izquierdo principal (GC).
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-[11px] font-mono-tech text-slate-400">
+              <span>PIEZA: MAMA IZQUIERDA</span>
+              <span class="text-amber-400">CONTROL DE MÁRGENES</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      initSurgeryCanvas();
+    }
+
+    let drawSurgeryCanvas = () => {};
+
+    function initSurgeryCanvas() {
+      const canvas = document.getElementById('surgery-canvas');
+      if (!canvas) return;
+
+      // Paso 4A coordenadas
+      const injectionSite = { nx: 0.65, ny: 0.56, r: 0.08 };
+      const sentinelNode = { nx: 0.76, ny: 0.36, r: 0.055 };
+      const secondaryNode = { nx: 0.79, ny: 0.26, r: 0.045 };
+
+      // Paso 4B márgenes quirúrgicos en la pieza panorámica
+      const margins = [
+        { id: 0, label: 'INTERNO (MÁS PRÓXIMO)', dist: '1,38 mm', nx: 0.24, ny: 0.24, closest: true },
+        { id: 1, label: 'SUPERIOR', dist: '3,85 mm', nx: 0.52, ny: 0.14, closest: false },
+        { id: 2, label: 'DERECHO / EXTERNO', dist: '2,85 mm', nx: 0.84, ny: 0.52, closest: false },
+        { id: 3, label: 'INFERIOR', dist: '3,70 mm', nx: 0.38, ny: 0.74, closest: false }
+      ];
+
+      drawSurgeryCanvas = () => {
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        const ctx = canvas.getContext('2d');
+
+        if (GameState.act4.step === 'gamma') {
+          // FONDO GAMMAGRÁFICO (Silueta torácica en escala de grises + captación)
+          ctx.fillStyle = '#e2e8f0';
+          ctx.fillRect(0, 0, w, h);
+
+          // Silueta torso/axila izquierda
+          ctx.fillStyle = '#cbd5e1';
+          ctx.beginPath();
+          ctx.moveTo(w * 0.25, h);
+          ctx.lineTo(w * 0.28, h * 0.32);
+          ctx.quadraticCurveTo(w * 0.48, h * 0.22, w * 0.72, h * 0.26);
+          ctx.lineTo(w * 0.92, h * 0.12);
+          ctx.lineTo(w * 0.96, h * 0.28);
+          ctx.lineTo(w * 0.76, h * 0.44);
+          ctx.lineTo(w * 0.76, h);
+          ctx.closePath();
+          ctx.fill();
+
+          // Foco de inyección periareolar (muy intenso con artefacto estrella)
+          const ix = injectionSite.nx * w;
+          const iy = injectionSite.ny * h;
+          ctx.strokeStyle = 'rgba(15, 23, 42, 0.35)';
+          ctx.lineWidth = 2;
+          for (let a = 0; a < Math.PI; a += Math.PI / 4) {
+            ctx.beginPath();
+            ctx.moveTo(ix - Math.cos(a) * 55, iy - Math.sin(a) * 55);
+            ctx.lineTo(ix + Math.cos(a) * 55, iy + Math.sin(a) * 55);
+            ctx.stroke();
+          }
+          ctx.fillStyle = '#090d16';
+          ctx.beginPath();
+          ctx.arc(ix, iy, 22, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Ganglio Centinela (foco principal en axila izquierda)
+          const sx = sentinelNode.nx * w;
+          const sy = sentinelNode.ny * h;
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath();
+          ctx.arc(sx, sy, 9, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Ganglio secundario craneal (menor intensidad)
+          const secX = secondaryNode.nx * w;
+          const secY = secondaryNode.ny * h;
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+          ctx.beginPath();
+          ctx.arc(secX, secY, 5.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 11px "JetBrains Mono"';
+          ctx.fillText('PROYECCIÓN ANTERIOR (ANT) · Tc99m', 14, 24);
+          ctx.fillText('INYECCIÓN PERIAREOLAR', ix - 75, iy + 36);
+        } else {
+          // PASO 4B: PIEZA DE TUMORECTOMÍA (MAPA PANORÁMICO CON CONTORNOS AMARILLO Y ROJO)
+          ctx.fillStyle = '#f8eff6';
+          ctx.fillRect(0, 0, w, h);
+
+          // Tejido adiposo periférico (pálido con vacuolas)
+          ctx.fillStyle = '#fffafd';
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(w * 0.52, h * 0.5, w * 0.42, h * 0.41, 0.05, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Contorno AMARILLO: Carcinoma Infiltrante (zona hipercelular violeta)
+          ctx.fillStyle = '#d8b4e2';
+          ctx.strokeStyle = '#eab308';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(w * 0.24, h * 0.28);
+          ctx.bezierCurveTo(w * 0.42, h * 0.18, w * 0.62, h * 0.20, w * 0.62, h * 0.38);
+          ctx.bezierCurveTo(w * 0.72, h * 0.44, w * 0.82, h * 0.42, w * 0.81, h * 0.56);
+          ctx.bezierCurveTo(w * 0.74, h * 0.68, w * 0.45, h * 0.72, w * 0.34, h * 0.66);
+          ctx.bezierCurveTo(w * 0.20, h * 0.58, w * 0.18, h * 0.38, w * 0.24, h * 0.28);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Contorno ROJO: Carcinoma Intraductal (in situ) central cribiforme/sólido (15-20%)
+          ctx.fillStyle = '#c084fc';
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.ellipse(w * 0.48, h * 0.46, w * 0.14, h * 0.09, 0.25, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Conductos dilatados "en sacabocados" dentro del componente in situ
+          ctx.fillStyle = '#f8fafc';
+          [
+            { dx: -0.06, dy: -0.02, r: 9 },
+            { dx: 0.01, dy: 0.01, r: 11 },
+            { dx: 0.07, dy: 0.03, r: 8 }
+          ].forEach(c => {
+            ctx.beginPath();
+            ctx.arc((0.48 + c.dx) * w, (0.46 + c.dy) * h, c.r, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          // Cotas verdes del dossier (para la trampa detective)
+          ctx.strokeStyle = '#22c55e';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(w * 0.22, h * 0.32);
+          ctx.lineTo(w * 0.80, h * 0.54);
+          ctx.moveTo(w * 0.55, h * 0.22);
+          ctx.lineTo(w * 0.56, h * 0.67);
+          ctx.stroke();
+
+          ctx.fillStyle = '#15803d';
+          ctx.font = 'bold 10px "JetBrains Mono"';
+          ctx.fillText('COTAS DOSSIER: 57,4 / 42,2 / 18,3 / 11,3 mm', w * 0.34, h * 0.20);
+
+          // Puntos interactivos de márgenes quirúrgicos (líneas azules)
+          margins.forEach(m => {
+            const mx = m.nx * w;
+            const my = m.ny * h;
+            const measured = GameState.act4.marginsMeasured[m.id];
+
+            ctx.strokeStyle = measured ? '#00e676' : '#2563eb';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(mx - 12, my - 12);
+            ctx.lineTo(mx + 12, my + 12);
+            ctx.stroke();
+
+            // Halo pulsante si no medido
+            ctx.strokeStyle = measured ? '#00e676' : '#ff2a85';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(mx, my, measured ? 16 : 20, 0, Math.PI * 2);
+            ctx.stroke();
+
+            if (measured) {
+              ctx.fillStyle = '#0f172a';
+              ctx.fillRect(mx - 34, my - 34, 68, 18);
+              ctx.fillStyle = m.closest ? '#fbbf24' : '#38bdf8';
+              ctx.font = 'bold 11px "JetBrains Mono"';
+              ctx.fillText(m.dist, mx - 26, my - 21);
+            }
+          });
+
+          // Leyenda contornos
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+          ctx.fillRect(10, 10, 265, 44);
+          ctx.fillStyle = '#facc15';
+          ctx.font = 'bold 10px "JetBrains Mono"';
+          ctx.fillText('■ CONTORNO AMARILLO: CA. INFILTRANTE', 18, 26);
+          ctx.fillStyle = '#f87171';
+          ctx.fillText('■ CONTORNO ROJO: CA. INTRADUCTAL (15-20%)', 18, 42);
+        }
+      };
+
+      canvas.addEventListener('click', (e) => {
+        if (GameState.act !== 4) return;
+        const pos = getPointerPos(canvas, e);
+
+        if (GameState.act4.step === 'gamma') {
+          if (Math.hypot(pos.nx - sentinelNode.nx, pos.ny - sentinelNode.ny) < sentinelNode.r) {
+            SoundFX.success();
+            addScore(400, 'GANGLIO CENTINELA', pos.clientX, pos.clientY);
+            logDossier('Linfogammagrafía (Tc99m): Captación intensa en ganglio centinela axilar izquierdo + ganglio secundario craneal.');
+            GameState.act4.step = 'margins';
+            switchToMarginsStep();
+            showFeedback('success', '¡GANGLIO CENTINELA IDENTIFICADO!', 'Foco axilar izquierdo principal marcado. Pasamos al mapa panorámico de la tumorectomía.');
+          } else if (Math.hypot(pos.nx - injectionSite.nx, pos.ny - injectionSite.ny) < injectionSite.r) {
+            penalize(10, 'PUNTO DE INYECCIÓN PERIAREOLAR', 'Esa gran mancha es el lugar de inyección del radiotrazador en la mama. Busca el foco de drenaje en la axila izquierda.');
+          } else if (Math.hypot(pos.nx - secondaryNode.nx, pos.ny - secondaryNode.ny) < secondaryNode.r) {
+            penalize(10, 'GANGLIO SECUNDARIO CRANEAL', 'Ese foco más tenue y craneal es un ganglio secundario. El ganglio centinela es el foco axilar de mayor intensidad justo debajo.');
+          }
+        } else if (GameState.act4.step === 'margins') {
+          margins.forEach(m => {
+            if (Math.hypot(pos.nx - m.nx, pos.ny - m.ny) < 0.085 && !GameState.act4.marginsMeasured[m.id]) {
+              GameState.act4.marginsMeasured[m.id] = true;
+              SoundFX.click();
+              addScore(200, m.dist, pos.clientX, pos.clientY);
+              drawSurgeryCanvas();
+
+              if (m.closest) {
+                showFeedback('bonus', '¡MARGEN MÁS PRÓXIMO LOCALIZADO!', 'El margen Interno está a 1,38 mm del componente infiltrante (todos los bordes están libres).');
+              }
+
+              if (GameState.act4.marginsMeasured.every(Boolean)) {
+                document.getElementById('act4-trap-box').classList.remove('hidden');
+              }
+            }
+          });
+        }
+      });
+
+      setupResponsiveCanvas(canvas, drawSurgeryCanvas);
+    }
+
+    function switchToMarginsStep() {
+      document.getElementById('act4-subtitle').textContent = 'Acto 4B · Pieza Quirúrgica de Tumorectomía';
+      document.getElementById('act4-title').textContent = 'CALIBRE LÁSER DE MÁRGENES QUIRÚRGICOS';
+      document.getElementById('act4-mode-badge').textContent = 'BLOQUE SELECCIONADO: A1 (60%)';
+      document.getElementById('act4-canvas-banner').textContent = 'PASO 4B: Haz clic en las 4 líneas azules de margen quirúrgico para verificar que todos los bordes están libres.';
+
+      document.getElementById('act4-side-content').innerHTML = `
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700 text-xs text-slate-300 space-y-1.5">
+          <div class="font-arcade text-cyan-300 font-bold">AUDITORÍA DE LA PIEZA QUIRÚRGICA</div>
+          <p>Mide los <strong>4 márgenes quirúrgicos</strong> marcados en azul en el mapa panorámico de la tumorectomía:</p>
+          <ul class="list-disc list-inside text-slate-400">
+            <li>Todos los bordes están libres (el más próximo es el <strong>Interno a 1,38 mm</strong> del infiltrante, seguido del posterior a 1,67 mm del intraductal).</li>
+          </ul>
+        </div>
+
+        <div id="act4-trap-box" class="hidden p-4 rounded-xl bg-amber-950/30 border border-amber-400/50 space-y-2.5">
+          <div class="font-arcade text-xs text-amber-300 font-bold">🕵️ RETO DETECTIVE: LA TRAMPA DEL DOSSIER</div>
+          <p class="text-xs text-slate-200 leading-relaxed">
+            En la imagen aparecen cotas verdes (57,4 mm, 42,2 mm, 18,3 mm y 11,3 mm), pero el informe definitivo dictamina un tamaño tumoral infiltrante de <strong>11 × 11 mm</strong>. Además, ¿qué cambia en la pieza definitiva respecto a la BAG?
+          </p>
+          <div class="space-y-2">
+            <button onclick="answerAct4Trap('correct')" class="btn-arcade w-full text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+              A) El tumor infiltrante mide 11×11 mm (pT1c), sube a Grado 2 de Nottingham (2+2+2) y se evidencia invasión perineural
+            </button>
+            <button onclick="answerAct4Trap('wrong1')" class="btn-arcade w-full text-left p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs text-slate-200">
+              B) El tumor mide 57,4 mm (pT3) y presenta invasión linfovascular masiva sin componente in situ
+            </button>
+          </div>
+        </div>
+      `;
+
+      drawSurgeryCanvas();
+    }
+
+    function answerAct4Trap(choice) {
+      if (choice === 'correct') {
+        SoundFX.bonus();
+        addScore(650, 'OJO DE HALCÓN QUIRÚRGICO');
+        GameState.medals.add('Ojo de Halcón Histológico');
+        logDossier('Tumorectomía MI: CDI NOS 11×11 mm (pT1c), Grado 2 Nottingham (2+2+2), invasión perineural (+), linfovascular (-). CDIS 15-20%. Bordes libres (mín. Interno 1,38 mm).');
+        showFeedback('bonus', '¡TRAMPA SUPERADA CON ÉXITO!', 'Tamaño infiltrante real: 11×11 mm (pT1c), Grado 2 de Nottingham e invasión perineural presente. Pasamos al Ganglio Centinela.');
+        setTimeout(() => renderAct5(), 1700);
+      } else {
+        penalize(15, 'ERROR DE INTERPRETACIÓN', 'Las cotas verdes grandes abarcan áreas amplias de la pieza/componente, pero el informe confirma tumor infiltrante de 11×11 mm (pT1c), Grado 2 e invasión perineural.');
+      }
+    }
+
+    /* ==========================================================================
+       8. ACTO 5: EL GANGLIO CENTINELA Y EL VEREDICTO pTNM
+       ========================================================================== */
+    function renderAct5() {
+      stopCanvasLoop();
+      GameState.act = 5;
+      GameState.act5 = { scannedNodes: [false, false, false], cytokeratinApplied: false, step: 'nodes' };
+      updateHUD();
+
+      const app = document.getElementById('app-container');
+      app.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+          <!-- Visor de Ganglios Centinela y Citoqueratinas AE1/AE3 -->
+          <div class="lg:col-span-7 bg-[#0a1122] neon-border-cyan rounded-2xl p-4 flex flex-col">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <span class="text-[10px] font-mono-tech text-cyan-400 uppercase tracking-widest">Acto 5 · Estadificación Ganglionar</span>
+                <h2 class="font-arcade text-base sm:text-lg font-bold text-white">GANGLIOS CENTINELA (MUESTRAS B, C, D)</h2>
+              </div>
+              <button id="btn-ae1ae3" onclick="toggleAE1AE3()" class="btn-arcade bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 text-xs font-arcade px-3.5 py-2">
+                🔬 APLICAR CITOQUERATINAS AE1/AE3
+              </button>
+            </div>
+
+            <div class="relative flex-1 min-h-[320px] sm:min-h-[380px] bg-slate-900 rounded-xl overflow-hidden border-2 border-slate-700 cursor-crosshair">
+              <canvas id="nodes-canvas"></canvas>
+              <div id="nodes-banner" class="absolute bottom-3 left-3 right-3 bg-slate-950/90 text-cyan-200 border border-cyan-500/40 px-3 py-2 rounded-lg text-xs font-mono-tech pointer-events-none">
+                Aplica Citoqueratinas AE1/AE3 y audita los 3 ganglios linfáticos aislados (Muestras B, C y D) haciendo clic en cada uno.
+              </div>
+            </div>
+          </div>
+
+          <!-- Terminal Final pTNM -->
+          <div class="lg:col-span-5 bg-[#0a1122] border border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700 text-xs text-slate-300 space-y-1.5">
+                <div class="font-arcade text-cyan-300 font-bold">CLAVE DE INMUNOTINCIÓN AE1/AE3</div>
+                <p>
+                  Las <strong>citoqueratinas AE1/AE3</strong> tiñen de marrón cualquier célula epitelial (metástasis de carcinoma). Los linfocitos normales, folículos reactivos, cápsula, grasa y <strong>hematíes congestivos rojos</strong> son negativos.
+                </p>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2 text-center text-xs font-mono-tech">
+                <div id="node-ind-0" class="p-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">Ganglio B</div>
+                <div id="node-ind-1" class="p-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">Ganglio C</div>
+                <div id="node-ind-2" class="p-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">Ganglio D</div>
+              </div>
+
+              <!-- Consola Final de Estadiaje pTNM -->
+              <div id="act5-tnm-console" class="hidden p-4 rounded-xl bg-gradient-to-b from-slate-900 to-cyan-950/30 border border-cyan-400/50 space-y-3">
+                <div class="font-arcade text-xs text-cyan-300 font-bold">TERMINAL DE VEREDICTO FINAL pTNM</div>
+                <p class="text-xs text-slate-200">
+                  Tumor infiltrante de <strong>11 × 11 mm</strong> (&gt;10 mm y ≤20 mm) y <strong>0/3 ganglios</strong> con AE1/AE3 negativo (TILs &lt;1%). Selecciona el estadio patológico definitivo:
+                </p>
+                <div class="grid grid-cols-1 gap-2">
+                  <button onclick="submitFinalTNM('pT1cN0sn')" class="btn-arcade text-left p-3 bg-slate-950 hover:bg-cyan-950/60 border border-cyan-500/40 text-xs font-mono-tech text-cyan-200 font-bold">
+                    ▶ pT1c N0(sn) · Carcinoma ductal infiltrante Luminal B (0/3 ganglios)
+                  </button>
+                  <button onclick="submitFinalTNM('pT2N1')" class="btn-arcade text-left p-3 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-xs font-mono-tech text-slate-300">
+                    ▶ pT2 N1mi · Tumor &gt;20 mm con micrometástasis ganglionar
+                  </button>
+                  <button onclick="submitFinalTNM('pTisN0')" class="btn-arcade text-left p-3 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-xs font-mono-tech text-slate-300">
+                    ▶ pTis N0 · Carcinoma intraductal exclusivo sin componente invasivo
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-[11px] font-mono-tech text-slate-400">
+              <span>TILs: &lt;1%</span>
+              <span class="text-emerald-400">RECUENTO: 0/3 GANGLIOS</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      initNodesCanvas();
+    }
+
+    let drawNodesCanvas = () => {};
+
+    function toggleAE1AE3() {
+      if (GameState.act5.cytokeratinApplied) return;
+      GameState.act5.cytokeratinApplied = true;
+      SoundFX.stain();
+      addScore(300, 'AE1/AE3 APLICADO');
+      const btn = document.getElementById('btn-ae1ae3');
+      btn.textContent = '✔ AE1/AE3 REVELADO (10x)';
+      btn.disabled = true;
+      document.getElementById('nodes-banner').textContent = 'Tinción AE1/AE3 revelada: Ninguna célula marrón. Haz clic en los 3 ganglios (B, C, D) para confirmar 0/3.';
+      drawNodesCanvas();
+    }
+
+    function initNodesCanvas() {
+      const canvas = document.getElementById('nodes-canvas');
+      if (!canvas) return;
+
+      const nodes = [
+        { id: 0, name: 'MUESTRA B (GC 1)', nx: 0.25, ny: 0.48, r: 0.14 },
+        { id: 1, name: 'MUESTRA C (GC 2)', nx: 0.54, ny: 0.34, r: 0.13 },
+        { id: 2, name: 'MUESTRA D (SEC)', nx: 0.76, ny: 0.64, r: 0.12 }
+      ];
+      const congestionZone = { nx: 0.35, ny: 0.22, r: 0.06 };
+
+      drawNodesCanvas = () => {
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        const ctx = canvas.getContext('2d');
+        const isCK = GameState.act5.cytokeratinApplied;
+
+        // Fondo tejido adiposo perinodal
+        ctx.fillStyle = isCK ? '#edf2f7' : '#faf5ff';
+        ctx.fillRect(0, 0, w, h);
+
+        // Vacuolas de adipocitos perinodales
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 36; i++) {
+          const ax = ((i * 67) % 92 + 4) / 100 * w;
+          const ay = ((i * 43) % 88 + 6) / 100 * h;
+          ctx.beginPath();
+          ctx.arc(ax, ay, 11, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        // Zona roja intensa: hematíes por congestión (trampa visual)
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.ellipse(congestionZone.nx * w, congestionZone.ny * h, 24, 13, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#991b1b';
+        ctx.font = 'bold 9px "JetBrains Mono"';
+        ctx.fillText('CONGESTIÓN (HEMATÍES)', congestionZone.nx * w - 45, congestionZone.ny * h - 18);
+
+        // Dibujar los 3 ganglios linfáticos
+        nodes.forEach(n => {
+          const x = n.nx * w;
+          const y = n.ny * h;
+          const rx = n.r * w;
+          const ry = n.r * h * 0.85;
+          const audited = GameState.act5.scannedNodes[n.id];
+
+          // Cápsula fibrosa rosada + parénquima linfoide
+          ctx.fillStyle = isCK ? '#94a3b8' : '#7e22ce';
+          ctx.strokeStyle = audited ? '#00e676' : '#f472b6';
+          ctx.lineWidth = audited ? 4 : 3;
+          ctx.beginPath();
+          ctx.ellipse(x, y, rx, ry, -0.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Folículos linfoides reactivos con centros germinales claros
+          ctx.fillStyle = isCK ? '#cbd5e1' : '#c084fc';
+          ctx.beginPath();
+          ctx.arc(x - rx * 0.3, y - ry * 0.15, 11, 0, Math.PI * 2);
+          ctx.arc(x + rx * 0.28, y + ry * 0.18, 9, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Etiqueta
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(x - 52, y + ry + 6, 104, 18);
+          ctx.fillStyle = audited ? '#4ade80' : '#f8fafc';
+          ctx.font = 'bold 10px "JetBrains Mono"';
+          ctx.fillText(audited ? `${n.name}: 0/1` : n.name, x - 46, y + ry + 18);
+        });
+      };
+
+      canvas.addEventListener('click', (e) => {
+        if (GameState.act !== 5) return;
+        const pos = getPointerPos(canvas, e);
+
+        if (Math.hypot(pos.nx - congestionZone.nx, pos.ny - congestionZone.ny) < congestionZone.r) {
+          penalize(10, 'HEMATÍES POR CONGESTIÓN', 'Esa zona roja intensa son hematíes extravasados/congestivos, no metástasis tumoral.');
+          return;
+        }
+
+        if (!GameState.act5.cytokeratinApplied) {
+          showFeedback('error', 'APLICA PRIMERO AE1/AE3', 'Pulsa el botón superior para teñir con citoqueratinas AE1/AE3 antes de validar los ganglios.');
+          return;
+        }
+
+        nodes.forEach(n => {
+          if (Math.hypot(pos.nx - n.nx, pos.ny - n.ny) < n.r && !GameState.act5.scannedNodes[n.id]) {
+            GameState.act5.scannedNodes[n.id] = true;
+            SoundFX.success();
+            addScore(250, 'GANGLIO LIMPIO', pos.clientX, pos.clientY);
+            const ind = document.getElementById(`node-ind-${n.id}`);
+            ind.className = 'p-2 rounded-lg bg-emerald-950/60 border border-emerald-400 text-emerald-300 font-bold';
+            ind.textContent = `✔ ${n.name.split(' ')[1]} (0/1)`;
+            drawNodesCanvas();
+
+            if (GameState.act5.scannedNodes.every(Boolean)) {
+              document.getElementById('act5-tnm-console').classList.remove('hidden');
+              showFeedback('success', '¡3/3 GANGLIOS NEGATIVOS (AE1/AE3)!', 'Ausencia total de células epiteliales metastásicas. Emite el estadio pTNM final.');
+            }
+          }
+        });
+      });
+
+      setupResponsiveCanvas(canvas, drawNodesCanvas);
+    }
+
+    function submitFinalTNM(choice) {
+      if (choice === 'pT1cN0sn') {
+        SoundFX.victory();
+        addScore(1000, 'VEREDICTO pT1c N0(sn)');
+        GameState.medals.add('Maestro del TNM');
+        if (GameState.integrity === 100) {
+          GameState.medals.add('Diagnóstico Impecable (100% Rigor)');
+        }
+        logDossier('ESTADIO PATOLÓGICO FINAL: pT1c N0(sn). Ausencia de metástasis en 3 ganglios centinela/secundarios (0/3).');
+        renderVictoryScreen();
+      } else {
+        penalize(15, 'ESTADIAJE pTNM INCORRECTO', 'Un carcinoma infiltrante de 11×11 mm (>10 mm y ≤20 mm) con 0/3 ganglios centinela negativos corresponde a pT1c N0(sn).');
+      }
+    }
+
+    /* ==========================================================================
+       9. PANTALLA FINAL DE RESULTADOS Y RESUMEN DEL CASO #04
+       ========================================================================== */
+    function renderVictoryScreen() {
+      stopCanvasLoop();
+      GameState.act = 6;
+      updateHUD();
+
+      const elapsedSec = Math.max(1, Math.round((Date.now() - GameState.startTime) / 1000));
+      const mins = Math.floor(elapsedSec / 60);
+      const secs = String(elapsedSec % 60).padStart(2, '0');
+
+      let rank = 'Residente de Anatomía Patológica';
+      let rankColor = 'text-cyan-300';
+      if (GameState.score >= 6500 && GameState.integrity >= 85) {
+        rank = 'JEFE DE SERVICIO DE ANATOMÍA PATOLÓGICA · UGR';
+        rankColor = 'text-amber-300';
+      } else if (GameState.score >= 4500) {
+        rank = 'MÉDICO ADJUNTO ESPECIALISTA EN PATOLOGÍA MAMARIA';
+        rankColor = 'text-emerald-300';
+      }
+
+      const medalsArr = Array.from(GameState.medals);
+      if (medalsArr.length === 0) medalsArr.push('Investigador Clínico del Caso #04');
+
+      const app = document.getElementById('app-container');
+      app.innerHTML = `
+        <div class="max-w-4xl mx-auto w-full bg-[#0a1122]/95 neon-border-cyan rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
+          <div class="text-center border-b border-slate-800 pb-5">
+            <span class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-mono-tech text-xs font-bold">
+              EXPEDIENTE #04 CERRADO CON ÉXITO
+            </span>
+            <h1 class="font-arcade text-2xl sm:text-4xl font-black text-white mt-3">
+              CASO RESUELTO: <span class="text-cyan-300">pT1c N0(sn)</span>
+            </h1>
+            <div class="mt-2 font-arcade text-xs sm:text-sm font-bold ${rankColor}">
+              RANGO OBTENIDO: ${rank}
+            </div>
+          </div>
+
+          <!-- Marcadores finales -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            <div class="bg-slate-900/90 border border-cyan-500/30 rounded-xl p-3">
+              <div class="text-[10px] font-mono-tech text-slate-400">PUNTUACIÓN TOTAL</div>
+              <div class="font-arcade text-xl sm:text-2xl font-black text-cyan-300 mt-1">${GameState.score}</div>
+            </div>
+            <div class="bg-slate-900/90 border border-emerald-500/30 rounded-xl p-3">
+              <div class="text-[10px] font-mono-tech text-slate-400">RIGOR CLÍNICO</div>
+              <div class="font-arcade text-xl sm:text-2xl font-black text-emerald-400 mt-1">${GameState.integrity}%</div>
+            </div>
+            <div class="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3">
+              <div class="text-[10px] font-mono-tech text-slate-400">COMBO MÁXIMO</div>
+              <div class="font-arcade text-xl sm:text-2xl font-black text-amber-300 mt-1">x${GameState.maxCombo}</div>
+            </div>
+            <div class="bg-slate-900/90 border border-pink-500/30 rounded-xl p-3">
+              <div class="text-[10px] font-mono-tech text-slate-400">TIEMPO DE GUARDIA</div>
+              <div class="font-arcade text-xl sm:text-2xl font-black text-pink-300 mt-1">${mins}:${secs}</div>
+            </div>
+          </div>
+
+          <!-- Medallas Desbloqueadas -->
+          <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl p-4">
+            <div class="font-arcade text-xs text-amber-300 font-bold mb-2">🏅 MEDALLAS DESBLOQUEADAS</div>
+            <div class="flex flex-wrap gap-2">
+              ${medalsArr.map(m => `
+                <span class="px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs font-mono-tech font-bold">
+                  ★ ${m}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Síntesis Anatomopatológica Oficial para Estudio -->
+          <div class="bg-slate-950/90 border border-cyan-500/30 rounded-xl p-4 sm:p-5 space-y-2 text-xs sm:text-sm text-slate-300">
+            <div class="font-arcade text-xs text-cyan-300 font-bold">📋 SÍNTESIS ANATOMOPATOLÓGICA DEFINITIVA (CASO Nº 4)</div>
+            <ul class="list-disc list-inside space-y-1.5 leading-relaxed">
+              <li><strong>Diagnóstico:</strong> Carcinoma ductal infiltrante NOS de mama izquierda (CSE), <strong>11 × 11 mm</strong>, <strong>Grado 2 de Nottingham</strong> (Formación tubular: 2; Atipia nuclear: 2; Índice mitótico: 2).</li>
+              <li><strong>Invasión:</strong> Invasión perineural <strong>presente</strong>; invasión linfovascular <strong>ausente</strong>. TILs &lt;1%.</li>
+              <li><strong>Componente intraductal (CDIS):</strong> Grado intermedio/bajo, patrón sólido/cribiforme con necrosis y calcificaciones (15-20% del volumen tumoral).</li>
+              <li><strong>Inmunohistoquímica:</strong> RE+ (100%, 3+), RP-, Ki-67 21%, HER2 (0) → <strong>Fenotipo Luminal B (HER2 negativo)</strong>.</li>
+              <li><strong>Márgenes quirúrgicos:</strong> Todos libres. El más próximo es el <strong>Interno a 1,38 mm</strong> del componente infiltrante (posterior a 1,67 mm del intraductal).</li>
+              <li><strong>Estado axilar y pTNM:</strong> 3 ganglios linfáticos negativos con citoqueratinas AE1/AE3 (0/3) → <strong>pT1c N0(sn)</strong>.</li>
+            </ul>
+          </div>
+
+          <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+            <button onclick="startGame()" class="btn-arcade pulse-cyan bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-arcade text-xs sm:text-sm px-7 py-3.5">
+              ↻ VOLVER A JUGAR EL CASO #04
+            </button>
+            <button onclick="toggleDossierModal()" class="btn-arcade bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-mono-tech text-xs px-5 py-3.5">
+              📋 VER BITÁCORA COMPLETA
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Inicializar aplicación en la pantalla de portada al cargar
+    window.addEventListener('DOMContentLoaded', () => {
+      renderIntroScreen();
+    });
+  </script>
+</body>
+</html>
